@@ -1,5 +1,4 @@
 require 'ostruct'
-require 'ipaddr'
 
 module MinecraftQuery
   class Protocol
@@ -120,7 +119,7 @@ module MinecraftQuery
           numplayers = rest.slice_to_null!.to_i
           maxplayers = rest.slice_to_null!.to_i
           hostport   = rest.slice!(0, 2).unpack('v').first
-          hostip     = IPAddr.new rest.slice_to_null!
+          hostip     = rest.slice_to_null!
           BasicStatResponse.new motd, gametype, map, numplayers, maxplayers, hostport, hostip
         else
           # full stat response
@@ -129,7 +128,6 @@ module MinecraftQuery
           properties.numplayers = properties.numplayers.to_i    if properties.respond_to? :numplayers
           properties.maxplayers = properties.maxplayers.to_i    if properties.respond_to? :maxplayers
           properties.hostport   = properties.hostport.to_i      if properties.respond_to? :hostport
-          properties.hostip     = IPAddr.new(properties.hostip) if properties.respond_to? :hostip
           raise InvalidPaddingError if rest[0, 10] != FULL_STAT_PADDING2
           rest.slice! 0, 10
           players = rest.slice_null_terminated_array!
