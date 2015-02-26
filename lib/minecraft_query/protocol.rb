@@ -44,6 +44,7 @@ module MinecraftQuery
     end
 
     class HandshakeResponse < Struct.new :challenge_token
+      alias_method :to_hash, :to_h
     end
 
     class BasicStatResponse < Struct.new :motd,
@@ -53,9 +54,11 @@ module MinecraftQuery
                                          :maxplayers,
                                          :hostport,
                                          :hostip
+      alias_method :to_hash, :to_h
     end
 
     class FullStatResponse < Struct.new :properties, :players
+      alias_method :to_hash, :to_h
     end
 
     def initialize
