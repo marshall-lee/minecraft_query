@@ -68,14 +68,19 @@ module MinecraftQuery
       self.session_id = rand(0x100000000) & 0x0F0F0F0F
     end
 
-    def session_id=(value)
-      @session_id_str = [value].pack('N')
-      @session_id = value
+    def session_id=(new_session_id)
+      if new_session_id != session_id
+        @session_id_str = [new_session_id].pack('N')
+        @session_id = new_session_id
+        @challenge_token = nil
+      end
     end
 
-    def challenge_token=(value)
-      @challenge_token_str = [value].pack('N')
-      @challenge_token = value
+    def challenge_token=(new_challenge_token)
+      if new_challenge_token != challenge_token
+        @challenge_token_str = [new_challenge_token].pack('N')
+        @challenge_token = new_challenge_token
+      end
     end
 
     def handshake_query
