@@ -57,7 +57,7 @@ module MinecraftQuery
             @socket = nil
             yield
           rescue Exception => e
-            EM.next_tick do
+            ::EM.next_tick do
               deferrable.fail e
             end
           else
