@@ -17,9 +17,9 @@ module MinecraftQuery
           begin
             result = @monitor.client.recv
           rescue Exception => e
-            @monitor.on_error e
+            @monitor.send :on_error, e
           else
-            @monitor.on_success result
+            @monitor.send :on_success, result
           end
         end
 
