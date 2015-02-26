@@ -58,6 +58,10 @@ module MinecraftQuery
 
     class FullStatResponse < Struct.new :properties, :players
       alias_method :to_hash, :to_h
+
+      class Properties < OpenStruct
+        alias_method :to_hash, :to_h
+      end
     end
 
     def initialize
@@ -124,7 +128,7 @@ module MinecraftQuery
         else
           # full stat response
           rest.slice! 0, 11
-          properties = OpenStruct.new(rest.slice_null_terminated_hash!)
+          properties = FullStatResponse::Properties.new rest.slice_null_terminated_hash!
           properties.numplayers = properties.numplayers.to_i    if properties.respond_to? :numplayers
           properties.maxplayers = properties.maxplayers.to_i    if properties.respond_to? :maxplayers
           properties.hostport   = properties.hostport.to_i      if properties.respond_to? :hostport
