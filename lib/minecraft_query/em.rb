@@ -57,7 +57,9 @@ module MinecraftQuery
             @socket = nil
             yield
           rescue Exception => e
-            deferrable.fail e
+            EM.next_tick do
+              deferrable.fail e
+            end
           else
             @watch = ::EM.watch(socket, Watcher, self, deferrable)
             @watch.notify_readable = true
