@@ -19,15 +19,15 @@ module MinecraftQuery
     end
 
     def handshake
-      wrap { send_handshake }
+      wrap { send_handshake_query }
     end
 
     def basic_stat
-      wrap { send_basic_stat }
+      wrap { send_basic_stat_query }
     end
 
     def full_stat
-      wrap { send_full_stat }
+      wrap { send_full_stat_query }
     end
 
     def recv
@@ -47,6 +47,18 @@ module MinecraftQuery
       socket.close
     end
 
+    def send_handshake_query
+      socket.send protocol.handshake_query, 0
+    end
+
+    def send_basic_stat_query
+      socket.send protocol.basic_stat_query, 0
+    end
+
+    def send_full_stat_query
+      socket.send protocol.full_stat_query, 0
+    end
+
     private
 
       def socket
@@ -61,18 +73,6 @@ module MinecraftQuery
         Timeout.timeout(timeout) { yield; recv }
       rescue Timeout::Error
         raise TimeoutError
-      end
-
-      def send_handshake
-        socket.send protocol.handshake_query, 0
-      end
-
-      def send_basic_stat
-        socket.send protocol.basic_stat_query, 0
-      end
-
-      def send_full_stat
-        socket.send protocol.full_stat_query, 0
       end
   end
 end
