@@ -25,15 +25,22 @@ module MinecraftQuery
     end
 
     def basic_stat
-      @last_basic_stat = wrap { send_basic_stat }
+      wrap { send_basic_stat }
     end
 
     def full_stat
-      @last_full_stat = wrap { send_full_stat }
+      wrap { send_full_stat }
     end
 
     def recv
-      protocol.parse_response! socket.recv(65536)
+      response = protocol.parse_response! socket.recv(65536)
+      case response
+      when Protocol::BasicStatResponse
+        @last_basic_stat = response
+      when Protocol::FullStatResponse
+        @last_full_stat = response
+      end
+      response
     rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ENETUNREACH
       raise ConnectionError
     end
