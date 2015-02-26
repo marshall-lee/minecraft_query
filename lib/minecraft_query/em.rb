@@ -53,9 +53,14 @@ module MinecraftQuery
       def wrap
         if ::EM.reactor_running?
           deferrable = ::EM::DefaultDeferrable.new
-          yield
-          @watch = ::EM.watch(socket, Watcher, self, deferrable)
-          @watch.notify_readable = true
+          begin
+            yield
+          rescue Exception => e
+            deferrable.fail e
+          else
+            @watch = ::EM.watch(socket, Watcher, self, deferrable)
+            @watch.notify_readable = true
+          end
           deferrable
         else
           super(&proc)
