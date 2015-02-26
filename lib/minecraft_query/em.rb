@@ -1,57 +1,24 @@
 require 'minecraft_query'
 require 'eventmachine'
 
+
 module MinecraftQuery
   module EM
     class Client < ::MinecraftQuery::Client
-      module Watcher
-        def initialize(client, deferrable)
-          @client = client
-          @deferrable = deferrable
-          @is_watching = true
-          @timer = ::EM::Timer.new(client.timeout) do
-            detach if watching?
-            @deferrable.fail Client::TimeoutError.new
-            @timer = nil
-          end
-        end
 
-        def notify_readable
-          detach
-          begin
-            result = @client.recv
-          rescue Exception => e
-            @deferrable.fail e
-          else
-            @deferrable.succeed result
-          ensure
-            cancel_timer
-          end
-        end
-
-        def watching?
-          @is_watching
-        end
-
-        def unbind
-          @is_watching = false
-        end
-
-        def cancel_timer
-          if @timer
-            @timer.cancel
-            @timer = nil
-          end
-        end
-      end
+      class Error < MinecraftQuery::Client::Error; end
+      class PreviousRequestNotFinished < Error; end
+      class MonitorAlreadyStarted < Error; end
 
       def close
-        unwatch
+        terminate_request
+        stop_monitor
         super
       end
 
       def wrap
         if ::EM.reactor_running?
+          raise PreviousRequestNotFinished if waiting_for_response?
           deferrable = ::EM::DefaultDeferrable.new
           begin
             yield
@@ -60,8 +27,8 @@ module MinecraftQuery
               deferrable.fail e
             end
           else
-            @watch = ::EM.watch(socket, Watcher, self, deferrable)
-            @watch.notify_readable = true
+            @request_watch = ::EM.watch socket, RequestWatcher, self, deferrable
+            @request_watch.notify_readable = true
           end
           deferrable
         else
@@ -69,11 +36,35 @@ module MinecraftQuery
         end
       end
 
-      private
-
-        def unwatch
-          @watch.detach if @watch && @watch.watching?
+      def start_monitor(callback=nil, errback=nil, &block)
+        raise PreviousRequestNotFinished if waiting_for_response?
+        unless monitoring?
+          callback ||= block
+          @monitor_watch = ::EM.watch socket, MonitorWatcher, self, callback, errback
+          @monitor_watch.notify_readable = true
         end
+      end
+
+      def stop_monitor
+        if monitoring?
+          @monitor_watch.detach
+        end
+      end
+
+      def monitoring?
+        @monitor_watch && @monitor_watch.watching?
+      end
+
+      def waiting_for_response?
+        @request_watch && @request_watch.watching?
+      end
+
+      def terminate_request
+        @request_watch.detach if watching_request?
+      end
     end
   end
 end
+
+require 'minecraft_query/em/request_watcher'
+require 'minecraft_query/em/monitor_watcher'
