@@ -17,9 +17,9 @@ module MinecraftQuery
           begin
             result = @monitor.client.recv
           rescue Exception => e
-            @monitor.on_fail e
+            @monitor.on_error e
           else
-            @monitor.on_succeed result
+            @monitor.on_success result
           end
         end
 
@@ -57,11 +57,11 @@ module MinecraftQuery
 
         attr_reader :rate
 
-        def on_succeed(result)
+        def on_success(result)
           @last_time = Time.now
         end
 
-        def on_fail(e)
+        def on_error(e)
         end
 
         def unwatch
@@ -80,7 +80,7 @@ module MinecraftQuery
 
           @timeout_timer = ::EM.add_periodic_timer(client.timeout) do
             if Time.now - last_time >= client.timeout
-              on_fail TimeoutError.new
+              on_error TimeoutError.new
               client.send_handshake_query
             end
           end
