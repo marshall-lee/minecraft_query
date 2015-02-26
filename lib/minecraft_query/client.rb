@@ -16,8 +16,6 @@ module MinecraftQuery
       @host     = host
       @port     = port
       @timeout  = timeout
-      @socket   = UDPSocket.new
-      @socket.connect host, port
     end
 
     def handshake
@@ -51,7 +49,13 @@ module MinecraftQuery
 
     private
 
-      attr_reader :socket
+      def socket
+        unless @socket
+          @socket = UDPSocket.new
+          @socket.connect host, port
+        end
+        @socket
+      end
 
       def wrap
         Timeout.timeout(timeout) { yield; recv }
