@@ -54,6 +54,7 @@ module MinecraftQuery
         if ::EM.reactor_running?
           deferrable = ::EM::DefaultDeferrable.new
           begin
+            @socket = nil
             yield
           rescue Exception => e
             deferrable.fail e
