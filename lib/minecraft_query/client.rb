@@ -47,16 +47,20 @@ module MinecraftQuery
       socket.close
     end
 
+    def reset!
+      protocol.generate_session_id!
+    end
+
     def send_handshake_query
-      socket.send protocol.handshake_query, 0
+      send protocol.handshake_query
     end
 
     def send_basic_stat_query
-      socket.send protocol.basic_stat_query, 0
+      send protocol.basic_stat_query
     end
 
     def send_full_stat_query
-      socket.send protocol.full_stat_query, 0
+      send protocol.full_stat_query
     end
 
     private
@@ -67,6 +71,12 @@ module MinecraftQuery
           @socket.connect host, port
         end
         @socket
+      end
+
+      def send(data)
+        socket.send data, 0
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ENETUNREACH
+        raise ConnectionError
       end
 
       def wrap

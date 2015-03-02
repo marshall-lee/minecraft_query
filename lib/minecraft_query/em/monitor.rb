@@ -52,7 +52,6 @@ module MinecraftQuery
         cancel_timers
       end
 
-
       private
 
         attr_reader :rate
@@ -62,6 +61,11 @@ module MinecraftQuery
         end
 
         def on_error(e)
+          client.reset! if e.is_a? MinecraftQuery::Client::ConnectionError
+        end
+
+        def on_send_error(e)
+          client.reset! if e.is_a? MinecraftQuery::Client::ConnectionError
         end
 
         def unwatch
@@ -70,18 +74,24 @@ module MinecraftQuery
 
         def start_timers
           @timer = ::EM.add_periodic_timer(1) do
-            client.send_full_stat_query
-            client.send_basic_stat_query
+            safe_send do
+              if client.protocol.challenge_token
+                client.send_full_stat_query
+                client.send_basic_stat_query
+              else
+                client.send_handshake
+              end
+            end
           end
 
           @handshake_timer = ::EM.add_periodic_timer(30) do
-            client.send_handshake_query
+            safe_send { client.send_handshake_query }
           end
 
           @timeout_timer = ::EM.add_periodic_timer(client.timeout) do
             if Time.now - last_time >= client.timeout
               on_error TimeoutError.new
-              client.send_handshake_query
+              safe_send { client.send_handshake_query }
             end
           end
         end
@@ -101,6 +111,13 @@ module MinecraftQuery
             @timeout_timer.cancel
             @timeout_timer = nil
           end
+        end
+
+        def safe_send
+          yield
+        rescue Exception => e
+          on_send_error e
+          client.reset!
         end
     end
   end
