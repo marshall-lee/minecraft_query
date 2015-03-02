@@ -52,15 +52,15 @@ module MinecraftQuery
     end
 
     def send_handshake_query
-      send protocol.handshake_query
+      send_data protocol.handshake_query
     end
 
     def send_basic_stat_query
-      send protocol.basic_stat_query
+      send_data protocol.basic_stat_query
     end
 
     def send_full_stat_query
-      send protocol.full_stat_query
+      send_data protocol.full_stat_query
     end
 
     private
@@ -73,7 +73,7 @@ module MinecraftQuery
         @socket
       end
 
-      def send(data)
+      def send_data(data)
         socket.send data, 0
       rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ENETUNREACH
         raise ConnectionError
