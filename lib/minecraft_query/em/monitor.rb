@@ -84,7 +84,7 @@ module MinecraftQuery
             end
           end
 
-          @handshake_timer = ::EM.add_periodic_timer(30) do
+          @handshake_timer = ::EM.add_periodic_timer(29) do
             safe_send { client.send_handshake_query }
           end
 
