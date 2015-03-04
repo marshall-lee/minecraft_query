@@ -73,7 +73,7 @@ module MinecraftQuery
         end
 
         def start_timers
-          @timer = ::EM.add_periodic_timer(1) do
+          @timer = ::EM.add_periodic_timer(rate) do
             safe_send do
               if client.protocol.challenge_token
                 client.send_full_stat_query
